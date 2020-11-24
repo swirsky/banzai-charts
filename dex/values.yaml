@@ -4,7 +4,7 @@
 # name: value
 
 image: banzaicloud/dex-shim
-imageTag: "0.3.8"
+imageTag: "0.6.0"
 imagePullPolicy: "IfNotPresent"
 
 replicas: 1
@@ -22,12 +22,6 @@ cloudsql:
     tag: 1.11
     pullPolicy: IfNotPresent
   instance: ""
-
-exampleApp:
-  enabled: false
-  clientID: ""
-  clientSecret: ""
-  redirectURI: ""
 
 # resources:
   # limits:
@@ -54,6 +48,10 @@ service:
 
 extraVolumes: []
 extraVolumeMounts: []
+
+extraSecrets: {}
+# filename1: content1
+# filename2: content2
 
 certs:
   tlsName: ""
@@ -87,6 +85,9 @@ config:
   frontend:
     theme: ""
 
+  oauth2:
+    skipApprovalScreen: false
+
   storage:
     type: ""
     config:
@@ -105,6 +106,8 @@ config:
   staticPasswords: []
 
 nodeSelector: {}
+
+affinity: {}
 
 ingress:
   enabled: false

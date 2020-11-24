@@ -1,78 +1,45 @@
-# Default values for cadence.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
+nameOverride: ""
+fullnameOverride: ""
+
+# Chart debug mode
+# (eg. disable helm hook delete policy)
+debug: false
 
 server:
-  replicaCount: 1
-
   image:
     repository: ubercadence/server
-    tag: 0.5.8
+    tag: 0.14.1
     pullPolicy: IfNotPresent
 
-  logLevel: "debug,info"
-
-  nameOverride: ""
-  fullnameOverride: ""
-
-
-  bindOnLocalHost: false
-
-  cassandraVisibilityKeyspace: cadence
-
-  frontend:
-    enabled: true
-    bindOnIP: "0.0.0.0"
-    service:
-      type: ClusterIP
-      port: 7933
+  # Global default settings (can be overridden per service)
+  replicaCount: 1
+  metrics:
+    # Annotate pods directly with Prometheus annotations.
+    # Use this if you installed Prometheus from a Helm chart.
+    annotations:
+      enabled: false
+    # Enable Prometheus ServiceMonitor
+    # Use this if you installed the Prometheus Operator (https://github.com/coreos/prometheus-operator).
+    serviceMonitor:
+      enabled: false
+      interval: 30s
     prometheus:
-      timerType: "histogram"
-      port: 8000
+      timerType: histogram
+    statsd: {}
+      #   hostPort: localhost:8125
 
-  matching:
-    enabled: true
-    bindOnIP: "0.0.0.0"
-    service:
-      type: ClusterIP
-      port: 7935
-    prometheus:
-      timerType: "histogram"
-      port: 8001
+  podAnnotations: {}
 
-  history:
-    enabled: true
-    bindOnIP: "0.0.0.0"
-    numHistoryShards: 4
-    service:
-      type: ClusterIP
-      port: 7934
-    prometheus:
-      timerType: "histogram"
-      port: 8002
+  podSecurityContext: {}
+    # fsGroup: 2000
 
-  worker:
-    enabled: true
-    bindOnIP: "0.0.0.0"
-    service:
-      type: ClusterIP
-      port: 7939
-    prometheus:
-      timerType: "histogram"
-      port: 8003
-
-  ingress:
-    enabled: false
-    annotations: {}
-      # kubernetes.io/ingress.class: nginx
-      # kubernetes.io/tls-acme: "true"
-    paths: []
-    hosts:
-      - chart-example.local
-    tls: []
-    #  - secretName: chart-example-tls
-    #    hosts:
-    #      - chart-example.local
+  securityContext: {}
+    # capabilities:
+    #   drop:
+    #   - ALL
+    # readOnlyRootFilesystem: true
+    # runAsNonRoot: true
+    # runAsUser: 1000
 
   resources: {}
     # We usually recommend not to specify default resources and to leave this as a conscious
@@ -85,16 +52,164 @@ server:
     # requests:
     #  cpu: 100m
     #  memory: 128Mi
-
   nodeSelector: {}
-
   tolerations: []
-
   affinity: {}
 
-  annotations: {}
-    # Annotation to enable Prometheus scrape functionality.
-    # prometheus.io/scrape: 'true'
+  config:
+    logLevel: "debug,info"
+
+    # IMPORTANT: This value cannot be changed, once it's set.
+    numHistoryShards: 512
+
+    persistence:
+      default:
+        driver: "" # cassandra or sql
+
+        cassandra:
+          hosts: []
+          # port: 9042
+          keyspace: cadence
+          user: ""
+          password: ""
+          existingSecret: ""
+          consistency: One
+          # datacenter: "us-east-1a"
+          # maxQPS: 1000
+          # maxConns: 2
+
+        sql:
+          pluginName: "" # mysql
+          host: ""
+          # port: 3306
+          database: cadence
+          user: ""
+          password: ""
+          existingSecret: ""
+          # maxConns: 20
+          # maxIdleConns: 20
+          # maxConnLifetime: "1h"
+          # maxQPS: 1000
+          # connectAttributes:
+            # tx_isolation: "READ-COMMITTED"
+
+      visibility:
+        driver: "" # cassandra or sql
+
+        cassandra:
+          hosts: []
+          # port: 9042
+          keyspace: cadence_visibility
+          user: ""
+          password: ""
+          existingSecret: ""
+          consistency: One
+          # datacenter: "us-east-1a"
+          # maxQPS: 1000
+          # maxConns: 2
+
+        sql:
+          pluginName: "" # mysql
+          host: ""
+          # port: 3306
+          database: cadence_visibility
+          user: ""
+          password: ""
+          existingSecret: ""
+          # maxConns: 20
+          # maxIdleConns: 20
+          # maxConnLifetime: "1h"
+          # maxQPS: 1000
+          # connectAttributes:
+            # tx_isolation: "READ-COMMITTED"
+
+  frontend:
+    # replicaCount: 1
+    service:
+      type: ClusterIP
+      port: 7933
+    metrics:
+      annotations: {}
+        # enabled: false
+      serviceMonitor: {}
+        # enabled: false
+      prometheus: {}
+        # timerType: histogram
+      statsd: {}
+      #   hostPort: localhost:8125
+    podAnnotations: {}
+    podSecurityContext: {}
+    securityContext: {}
+    resources: {}
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
+
+  history:
+    # replicaCount: 1
+    service:
+      # type: ClusterIP
+      port: 7934
+    metrics:
+      annotations: {}
+        # enabled: false
+      serviceMonitor: {}
+        # enabled: false
+      prometheus: {}
+        # timerType: histogram
+      statsd: {}
+      #   hostPort: localhost:8125
+    podAnnotations: {}
+    podSecurityContext: {}
+    securityContext: {}
+    resources: {}
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
+
+  matching:
+    # replicaCount: 1
+    service:
+      # type: ClusterIP
+      port: 7935
+    metrics:
+      annotations: {}
+        # enabled: false
+      serviceMonitor: {}
+        # enabled: false
+      prometheus: {}
+        # timerType: histogram
+      statsd: {}
+      #   hostPort: localhost:8125
+    podAnnotations: {}
+    podSecurityContext: {}
+    securityContext: {}
+    resources: {}
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
+
+  worker:
+    # replicaCount: 1
+    service:
+      # type: ClusterIP
+      port: 7939
+    metrics:
+      annotations: {}
+        # enabled: false
+      serviceMonitor: {}
+        # enabled: false
+      prometheus: {}
+        # timerType: histogram
+      statsd: {}
+      #   hostPort: localhost:8125
+    podAnnotations: {}
+    podSecurityContext: {}
+    securityContext: {}
+    resources: {}
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
 
 web:
   enabled: true
@@ -103,13 +218,14 @@ web:
 
   image:
     repository: ubercadence/web
-    tag: 3.1.2
+    tag: 3.18.1
     pullPolicy: IfNotPresent
 
-  cadenceTchannelPeers: cadence:7933
-
-  nameOverride: ""
-  fullnameOverride: ""
+  tcheck:
+    image:
+      repository: ghcr.io/banzaicloud/tcheck
+      tag: latest
+      pullPolicy: IfNotPresent
 
   service:
     type: ClusterIP
@@ -132,6 +248,16 @@ web:
     #    hosts:
     #      - chart-example.local
 
+  podSecurityContext: {}
+    # fsGroup: 2000
+
+  securityContext: {}
+    # capabilities:
+    #   drop:
+    #   - ALL
+    # readOnlyRootFilesystem: true
+    # runAsNonRoot: true
+    # runAsUser: 1000
 
   resources: {}
     # We usually recommend not to specify default resources and to leave this as a conscious
@@ -151,24 +277,35 @@ web:
 
   affinity: {}
 
+dynamicConfig:
+  values: {}
+  pollInterval: "10s"
+
+schema:
+  setup:
+    enabled: true
+    backoffLimit: 100
+  update:
+    enabled: true
+    backoffLimit: 100
 
 cassandra:
+  enabled: true
   image:
     repo: cassandra
     tag: 3.11.3
     pullPolicy: IfNotPresent
-  enabled: true
-  seeds: cassandra
-  consistency: One
-  keyspace: cadence
   config:
     cluster_size: 1
-  resources: {}
-    # requests:
-    #   memory: 4Gi
-    #   cpu: 1
-    # limits:
-    #   cpu: 2
-  # podDisruptionBudget:
-  #   maxUnavailable: 1
-    # minAvailable: 1
+    ports:
+      cql: 9042
+
+mysql:
+  enabled: false
+  imageTag: "5.7.26"
+  service:
+    port: 3306
+  mysqlUser: cadence
+  initializationFiles:
+    user.sql: |-
+      GRANT ALL PRIVILEGES ON *.* TO 'cadence'@'%';

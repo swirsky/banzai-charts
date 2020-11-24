@@ -1,4 +1,4 @@
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ template "kubernetes-dashboard.fullname" . }}
@@ -18,13 +18,33 @@ spec:
       maxSurge: 0
       maxUnavailable: 1
     type: RollingUpdate
+  selector:
+    matchLabels:
+      app: {{ template "kubernetes-dashboard.name" . }}
+      chart: {{ template "kubernetes-dashboard.chart" . }}
+      release: {{ .Release.Name }}
+      heritage: {{ .Release.Service }}
+      kubernetes.io/cluster-service: "true"
+  {{- if .Values.labels }}
+  {{ toYaml .Values.labels | indent 4 }}
+  {{- end }}
   template:
     metadata:
       labels:
         app: {{ template "kubernetes-dashboard.name" . }}
+        chart: {{ template "kubernetes-dashboard.chart" . }}
         release: {{ .Release.Name }}
+        heritage: {{ .Release.Service }}
         kubernetes.io/cluster-service: "true"
+    {{- if .Values.labels }}
+    {{ toYaml .Values.labels | indent 4 }}
+    {{- end }}
     spec:
+      {{- if and .Values.rbac.enabled .Values.rbac.psp.enabled }}
+      securityContext:
+        runAsUser: 65534
+        fsGroup: 65534
+      {{- end }}
       serviceAccountName: {{ template "kubernetes-dashboard.serviceAccountName" . }}
       containers:
       - name: {{ .Chart.Name }}
@@ -55,8 +75,6 @@ spec:
         securityContext:
           readOnlyRootFilesystem: true
           allowPrivilegeEscalation: false
-          runAsUser: 65534
-          fsGroup: 65534          
         resources:
 {{ toYaml .Values.resources | indent 10 }}
     {{- if .Values.nodeSelector }}
